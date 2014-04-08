@@ -1,0 +1,12 @@
+pre {
+  max-height: 600px;
+  overflow-y: auto;
+  margin-top: 10px;
+  background-color: #002B36;
+  color: #93A1A1;
+} 
+
+body {
+  background: none transparent;
+  padding: 5px 5px;
+}

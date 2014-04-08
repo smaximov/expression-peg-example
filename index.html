@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html ng-app="peg">
+  <head>
+    <meta charset="utf-8" />
+    <title>Вычисление логического выражения</title>
+    <link rel="stylesheet" href="vendor/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+
+    <script src="vendor/js/jquery.js"></script>
+    <script src="vendor/js/peg.js"></script>
+    <script src="vendor/js/angular.js"></script>
+    <script src="js/app.js"></script>
+  </head>
+  <body ng-controller="MainCtrl">
+    <script id="grammar" type="text/template">
+
+{
+  function BooleanLiteral (value) {
+    this.evaluate = function () {
+      return value;
+    };
+  }
+
+  function Variable (variable) {
+    variable = variable.join('');
+    this.evaluate = function (env) {
+      if (!(variable in env)) {
+        throw new Error("Undefined variable `" + variable + "'");
+      }
+
+      var value = env[variable];
+      if ((/^(yes|true)$/).test(value)) return true;
+      if ((/^(no|false)$/).test(value)) return false;
+
+      throw new Error("Variable `" + variable + "' is not a boolean: " + value);
+    }
+  }
+
+  function Negate (arg) {
+    this.evaluate = function (env) {
+      return !arg.evaluate(env);
+    };
+  }
+
+  var dispatch = {
+    '&': function (a, b) { return a && b },
+    '|': function (a, b) { return a || b }
+  }
+
+  function BinOp (op1, o, op2) {
+    this.evaluate = function (env) {
+      return dispatch[o](op1.evaluate(env), op2.evaluate(env));
+    }
+  }
+}
+start
+  = expr
+
+expr
+  = head:term rest:(op term)* {
+    var res = head;
+    rest.forEach(function (elements) {
+      res = new BinOp(res, elements[0], elements[1]);
+    });
+    return res;
+  }
+op
+  = space o:('&' / '|') space { return o; }
+
+term
+  = negate arg:(primary) { return new Negate(arg) }
+  / primary
+
+primary
+  = literal
+  / variable
+  / space '(' space expr:expr space ')' space { return expr; }
+
+variable "variable" // lowercase letters
+  = space letters:[a-z]+ space { return new Variable(letters); }
+
+literal
+  = space ('true'/'yes') space { return new BooleanLiteral(true); }
+  / space ('false'/'no') space { return new BooleanLiteral(false); }
+
+negate
+  = space '!' space
+
+space
+  = ' '*
+
+
+    </script>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          <form role="form" class="form-horizontal">
+            <div class="form-group" ng-class="{'has-error': expr && !isValid(expr) };">
+              <label class="control-label col-md-2" for="expr">Выражение</label>
+              <div class="col-md-10">
+                <input class="form-control" type="text" name="expr" ng-model="expr"
+                  placeholder="Введите логическое выражение&hellip;" />
+              </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-success': result !== null };">
+                <label class="control-label col-md-2" for="result">Результат</label>
+                <div class="col-md-10">
+                  <input type="text" class="form-control" name="result" disabled
+                    value="{{ evaluate(expr, env) }}" />
+                </div>
+            </div>
+
+            <div class="row">
+              <label class="control-label col-md-2">Переменные</label>
+            </div>
+
+            <hr />
+
+            <div class="form-group" ng-repeat="variable in vars"
+                ng-class="{'has-error': !isEmptyOrBoolean(env[variable]) };">
+                <label class="control-label col-md-2">{{ variable }}</label>
+                <div class="col-md-10">
+                  <div class="input-group">
+                    <input type="text" class="form-control" ng-model="env[variable]"
+                     placeholder="true, false, yes, no" />
+                    <span class="input-group-btn">
+                      <button class="btn btn-danger" ng-click="remove(variable);">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                    </span>
+                  </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+              <label class="control-label col-md-2 col-md-offset-2">Добавить</label>
+              <div class="col-md-8">
+                  <div class="input-group">
+                    <input type="text" class="form-control" ng-model="addvar"
+                     placeholder="Введите название переменной&hellip;" />
+                    <span class="input-group-btn">
+                      <button class="btn btn-success" ng-click="add(addvar);">
+                        <span class="glyphicon glyphicon-plus"></span>
+                      </button>
+                    </span>
+                  </div>
+                </div>
+            </div>
+            <div class="row" ng-show="error">
+              <div class="col-md-12">
+                <p class="alert alert-danger">{{ error }}</p>
+              </div>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" ng-model="debug" />
+                Показать грамматику
+              </label>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="row" ng-show="debug">
+        <div class="col-md-6 col-md-offset-3">
+          <pre>{{ grammar }}</pre>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
