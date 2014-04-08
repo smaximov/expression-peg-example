@@ -2,6 +2,10 @@ Small example demonstrating parsing and evaluating
 logical expressions with [PEG.js](http://pegjs.majda.cz/).
 [Featured blog post](http://blog.smaximov.info/blog/2014/04/08/parsing-expressions-with-peg-dot-js/) (in Russian).
 
+# Installation
+
+Simply point your web server or browser to [index.html](index.html).
+
 # Online demo
 
 [&hellip;located here](http://demos.smaximov.info/peg) (in Russian).
