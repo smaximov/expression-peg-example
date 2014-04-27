@@ -12,5 +12,5 @@ Simply point your web server or browser to [index.html](index.html).
 
 # License
 
-This code is distributed under the terms of WTFTPL License, version 2.
+This code is distributed under the terms of WTFTPL License Version 2, unless otherwise stated.
 See [LICENSE](LICENSE) for further information.
